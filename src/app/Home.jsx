@@ -1,4 +1,4 @@
-import { Suspense, use, ViewTransition } from "react";
+import { useState, useEffect } from "react";
 import * as Design from "@/design";
 import { useRouter } from "@/router/index.jsx";
 import * as data from "@/data/index.js";
@@ -24,55 +24,37 @@ function Lesson({ item, completeAction }) {
 }
 
 function LessonList({ tab, search, completeAction }) {
-  /**
-   * data.getLessons is a suspense-enabled data fetching function.
-   * It returns a cached promise that fetched the first time it's called
-   * with a given tab+search, then it returns the resolved data on subsequent calls.
-   *
-   * Since it's cached, there needs to be a way to clear the cache and re-fetch the data,
-   * like after a mutation like toggling complete. This is done with the data.revalidate() function,
-   * which is called in the completeAction below.
-   *
-   * The use(data.getLessons(...)) call here will suspend the component
-   * until the promise resolves, then return the resolved data.
-   */
-  const lessons = use(data.getLessons(tab, search));
+  const [lessons, setLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    data.getLessons(tab, search).then((result) => {
+      setLessons(result);
+      setLoading(false);
+    });
+  }, [tab, search]);
+
+  if (loading) {
+    return <Design.FallbackList />;
+  }
 
   if (lessons.length === 0) {
-    return (
-      <ViewTransition key="empty" default="none" enter="auto" exit="auto">
-        <Design.EmptyList />
-      </ViewTransition>
-    );
+    return <Design.EmptyList />;
   }
 
   return (
-    /**
-     * This ViewTransition will cross-fade results to No Results.
-     */
-    <ViewTransition key="results" default="none" enter="auto" exit="auto">
-      <Design.List>
-        {lessons.map((item) => (
-          /**
-           * This ViewTransition will animate unique items in the list.
-           * For example, when searching, existing items will "move" to
-           * their new positions, and new items will fade in. Items that
-           * are no longer in the list will fade out.
-           */
-          <ViewTransition key={item.id}>
-            <div>
-              <ViewTransition default="none">
-                <Lesson
-                  id={item.id}
-                  item={item}
-                  completeAction={completeAction}
-                />
-              </ViewTransition>
-            </div>
-          </ViewTransition>
-        ))}
-      </Design.List>
-    </ViewTransition>
+    <Design.List>
+      {lessons.map((item) => (
+        <div key={item.id}>
+          <Lesson
+            id={item.id}
+            item={item}
+            completeAction={completeAction}
+          />
+        </div>
+      ))}
+    </Design.List>
   );
 }
 
@@ -130,20 +112,11 @@ export default function Home() {
          the tab, so the user knows their optimistic tab is still loading.
       */}
       <Design.TabList activeTab={tab} changeAction={tabAction}>
-        {/*
-           This fallback will be shown when the LessonList suspends initially.
-           It will not be show again, like when switching tabs or searching,
-           because those updates are wrapped in transitions. Instead of showing
-           the fallback again, the list will be updated in the background and
-           the optimistic/pending states will be used to show loading instead.
-        */}
-        <Suspense fallback={<Design.FallbackList />}>
-          <LessonList
-            tab={tab}
-            search={search}
-            completeAction={completeAction}
-          />
-        </Suspense>
+        <LessonList
+          tab={tab}
+          search={search}
+          completeAction={completeAction}
+        />
       </Design.TabList>
     </>
   );

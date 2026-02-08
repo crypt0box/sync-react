@@ -1,4 +1,3 @@
-import { ViewTransition } from "react";
 import {
   Empty,
   EmptyDescription,

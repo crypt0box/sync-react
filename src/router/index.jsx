@@ -4,8 +4,6 @@ import {
   use,
   useLayoutEffect,
   useEffect,
-  startTransition,
-  addTransitionType,
 } from "react";
 import { revalidate } from "../data/index.js";
 
@@ -49,12 +47,10 @@ function NavigationRouter({ children }) {
 
   function refresh() {
     revalidate();
-    startTransition(() => {
-      setRouterState((prev) => {
-        return {
-          ...prev,
-        };
-      });
+    setRouterState((prev) => {
+      return {
+        ...prev,
+      };
     });
   }
 
@@ -63,8 +59,6 @@ function NavigationRouter({ children }) {
       if (!event.canIntercept) {
         return;
       }
-      const navigationType = event.navigationType;
-      const previousIndex = window.navigation.currentEntry.index;
       const currURL = new URL(location.href);
       const newURL = new URL(event.destination.url);
 
@@ -77,27 +71,13 @@ function NavigationRouter({ children }) {
 
       event.intercept({
         handler() {
-          let promise;
-          startTransition(() => {
-            addTransitionType("navigation-" + navigationType);
-            if (navigationType === "traverse") {
-              // For traverse types it's useful to distinguish going back or forward.
-              const nextIndex = event.destination.index;
-              if (nextIndex > previousIndex) {
-                addTransitionType("navigation-forward");
-              } else if (nextIndex < previousIndex) {
-                addTransitionType("navigation-back");
-              }
-            }
-            promise = new Promise((resolve) => {
-              setRouterState({
-                url: newURL.pathname,
-                search: parseSearchParams(newURL.search),
-                pendingNav: resolve,
-              });
+          return new Promise((resolve) => {
+            setRouterState({
+              url: newURL.pathname,
+              search: parseSearchParams(newURL.search),
+              pendingNav: resolve,
             });
           });
-          return promise;
         },
         focusReset: onlyParamsOrHash ? "manual" : "after-transition",
       });
@@ -144,69 +124,57 @@ function HistoryRouter({ children }) {
   });
 
   function navigate(url) {
-    startTransition(() => {
-      setRouterState(() => {
-        return {
-          url,
-          search: {},
-          pendingNav() {
-            window.history.pushState({}, "", url);
-          },
-        };
-      });
+    setRouterState(() => {
+      return {
+        url,
+        search: {},
+        pendingNav() {
+          window.history.pushState({}, "", url);
+        },
+      };
     });
   }
 
   function setParams(key, value) {
-    startTransition(() => {
-      setRouterState((prev) => {
-        const newParams = { ...prev.search };
-        if (value !== "") {
-          newParams[key] = value;
-        } else {
-          delete newParams[key];
-        }
-        return {
-          url: prev.url,
-          search: newParams,
-          pendingNav() {
-            const newUrlParams = new URLSearchParams(newParams).toString();
-            window.history.pushState(
-              {},
-              "",
-              prev.url + (newUrlParams ? `?${newUrlParams}` : ""),
-            );
-          },
-        };
-      });
+    setRouterState((prev) => {
+      const newParams = { ...prev.search };
+      if (value !== "") {
+        newParams[key] = value;
+      } else {
+        delete newParams[key];
+      }
+      return {
+        url: prev.url,
+        search: newParams,
+        pendingNav() {
+          const newUrlParams = new URLSearchParams(newParams).toString();
+          window.history.pushState(
+            {},
+            "",
+            prev.url + (newUrlParams ? `?${newUrlParams}` : ""),
+          );
+        },
+      };
     });
   }
 
   function refresh() {
     revalidate();
-    startTransition(() => {
-      setRouterState((prev) => {
-        return {
-          ...prev,
-        };
-      });
+    setRouterState((prev) => {
+      return {
+        ...prev,
+      };
     });
   }
 
   useEffect(() => {
     function handlePopState() {
-      // We still popstate in a transition, but React will flush this synchronously.
-      // This ensures that browser 'back' navigations are instant, but if the data
-      // layer has a cache miss, it will force fallbacks to be shown. This is a good
-      // example why just clearing the cache when a component unmounts is a bad idea.
-      startTransition(() => {
-        setRouterState({
-          url: document.location.pathname,
-          search: parseSearchParams(document.location.search),
-          pendingNav() {
-            // Noop. URL has already updated.
-          },
-        });
+      setRouterState({
+        url: document.location.pathname,
+        search: parseSearchParams(document.location.search),
+        pendingNav() {
+          // Noop. URL has already updated.
+        },
       });
     }
     window.addEventListener("popstate", handlePopState);

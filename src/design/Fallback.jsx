@@ -5,7 +5,6 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@/components//ui/item";
-import { ViewTransition } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function FallbackListItem() {
@@ -31,25 +30,23 @@ export function FallbackListItem() {
 
 export default function FallbackList() {
   return (
-    <ViewTransition>
-      <div className="flex flex-col pl-4 pr-4">
-        <div>
-          <FallbackListItem />
-        </div>
+    <div className="flex flex-col pl-4 pr-4">
+      <div>
         <FallbackListItem />
-        <div>
-          <FallbackListItem />
-        </div>
-        <div>
-          <FallbackListItem />
-        </div>
-        <div>
-          <FallbackListItem />
-        </div>
-        <div>
-          <FallbackListItem />
-        </div>
       </div>
-    </ViewTransition>
+      <FallbackListItem />
+      <div>
+        <FallbackListItem />
+      </div>
+      <div>
+        <FallbackListItem />
+      </div>
+      <div>
+        <FallbackListItem />
+      </div>
+      <div>
+        <FallbackListItem />
+      </div>
+    </div>
   );
 }

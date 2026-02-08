@@ -1,6 +1,6 @@
 import { useRouter } from "@/router/index.jsx";
 import { login, prefetchLessons } from "@/data/index.js";
-import { useState, ViewTransition } from "react";
+import { useState } from "react";
 import * as Design from "@/design";
 
 const initialFieldData = {

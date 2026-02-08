@@ -1,4 +1,3 @@
-import React, { ViewTransition } from "react";
 import { createRoot } from "react-dom/client";
 
 import "./index.css";
@@ -40,22 +39,18 @@ function AppRouter() {
   return (
     <>
       {url === "/" && (
-        <ViewTransition key={url} default="none" enter="auto" exit="auto">
-          <Layout heading={<div>Course Lessons</div>}>
-            <Home />
-          </Layout>
-        </ViewTransition>
+        <Layout heading={<div>Course Lessons</div>}>
+          <Home />
+        </Layout>
       )}
       {url === "/login" && (
-        <ViewTransition key={url} default="none" enter="auto" exit="auto">
-          <Layout>
-            <div className="flex flex-col gap-6 p-12">
-              <Card className="border-none">
-                <Login />
-              </Card>
-            </div>
-          </Layout>
-        </ViewTransition>
+        <Layout>
+          <div className="flex flex-col gap-6 p-12">
+            <Card className="border-none">
+              <Login />
+            </Card>
+          </div>
+        </Layout>
       )}
     </>
   );
