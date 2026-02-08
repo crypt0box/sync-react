@@ -17,7 +17,7 @@ function Lesson({ item, completeAction }) {
   );
 }
 
-function LessonList({ tab, search, completeAction }) {
+function LessonList({ tab, search, refreshKey, completeAction }) {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +27,7 @@ function LessonList({ tab, search, completeAction }) {
       setLessons(result);
       setLoading(false);
     });
-  }, [tab, search]);
+  }, [tab, search, refreshKey]);
 
   if (loading) {
     return <Design.FallbackList />;
@@ -56,6 +56,7 @@ export default function Home() {
   const router = useRouter();
   const search = router.search.q || "";
   const tab = router.search.tab || "all";
+  const [refreshKey, setRefreshKey] = useState(0);
 
   function searchAction(value) {
     router.setParams("q", value);
@@ -67,7 +68,7 @@ export default function Home() {
 
   async function completeAction(id) {
     await data.mutateToggle(id);
-    router.refresh();
+    setRefreshKey((k) => k + 1);
   }
   return (
     <>
@@ -76,6 +77,7 @@ export default function Home() {
         <LessonList
           tab={tab}
           search={search}
+          refreshKey={refreshKey}
           completeAction={completeAction}
         />
       </Design.TabList>
